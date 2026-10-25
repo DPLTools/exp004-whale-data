@@ -1,0 +1,37 @@
+# Builds data/btc-traders.json once a day. Free on public repositories.
+name: build-btc-trader-list
+on:
+  schedule:
+    - cron: '20 0 * * *'   # 00:20 UTC daily
+  workflow_dispatch: {}
+  push:                    # also runs when the job code changes
+    branches: [main]
+    paths: ['server/**', '.github/workflows/build-list.yml']
+permissions:
+  contents: write
+concurrency:
+  group: build-list
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Mock test
+        run: node server/test-build-list.mjs
+      - name: Build list
+        run: node server/build-list.mjs data/btc-traders.json
+        env:
+          MAX_MINUTES: '120'
+      - name: Commit list
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/btc-traders.json
+          git diff --cached --quiet || git commit -m "Update BTC trader list"
+          git pull --rebase origin main
+          git push
