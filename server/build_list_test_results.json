@@ -1,0 +1,83 @@
+{
+ "kind": "mock (no network, simulated clock)",
+ "results": [
+  {
+   "id": "S1",
+   "item": "selection: Big, 0xaaaa(5,000 BTC fills over 2.5 pages), Flaky after two 429s; Bot (turnover 500x), Small (value), Eth (share 13%), Few (2 days) excluded; Heavy (40,000 fills) listed as incomplete",
+   "pass": true,
+   "actual": "Big,0xaaaa,Heavy,Flaky · {\"turnover above 200x\":1,\"account value below minimum\":1,\"BTC share below 30%\":1,\"fewer than 5 BTC days\":1}"
+  },
+  {
+   "id": "S2",
+   "item": "exact counts: Big 300 BTC of 400 fills (75%), wallet 2 all 5,000 fills read once (de-duplicated), complete",
+   "pass": true,
+   "actual": "Big 300 75% true · w2 5000 true"
+  },
+  {
+   "id": "S3",
+   "item": "page cap: 40,000 fills > 15 pages → listed with complete=false and cover < 30 days (pages overlap by the boundary millisecond, so slightly under 30,000 distinct fills)",
+   "pass": true,
+   "actual": "29986 fills · complete false · cover 22.7d"
+  },
+  {
+   "id": "S4",
+   "item": "rate limit: no 60-second window above the 1,000 budget (server-side weights), 429s retried",
+   "pass": true,
+   "actual": "max 60s weight 982 · requests 25 · 429 2 · waited 148s (simulated)"
+  },
+  {
+   "id": "S5",
+   "item": "output schema the app reads (v, generatedAt, wallets[a,av,share,complete,...])",
+   "pass": true,
+   "actual": "v,generatedAt,window,thresholds,days,counts,wallets · dir,a,name,av,vlm,turn,fills,days,share,notional,pnl30,complete,cover"
+  },
+  {
+   "id": "S6",
+   "item": "2,500 fills in one millisecond: hole recorded, marked incomplete, no endless loop",
+   "pass": true,
+   "actual": "pages 3 · holes 1 · fills 2000"
+  },
+  {
+   "id": "S7",
+   "item": "time limit: stops, publishes what was checked and says how many were not checked",
+   "pass": true,
+   "actual": "checked 5 · not checked 31"
+  },
+  {
+   "id": "S8",
+   "item": "leaderboard down → job fails (no empty list is published)",
+   "pass": true,
+   "actual": "leaderboard HTTP 503"
+  },
+  {
+   "id": "S9",
+   "item": "daily BTC position from fills (startPosition + signed size): before the first fill uses its start; past the read part is unknown; fills without side are unknown",
+   "pass": true,
+   "actual": "SSSLLLFFFSSSSSSSSSSSSSSSSSSSSS · SSSLLLFFFSS------------------- · ------------------------------"
+  },
+  {
+   "id": "S10",
+   "item": "majority vs next-day move: ties, fewer than 5 open, unchanged and missing closes are skipped",
+   "pass": true,
+   "actual": "{\"days\":4,\"decided\":2,\"hit\":1,\"up\":3}"
+  },
+  {
+   "id": "S11",
+   "item": "output has 30 day ends, closes from daily candles, a dir string per wallet and the whole-list backtest",
+   "pass": true,
+   "actual": "closes 100000…102900 · dirs -----,----- · {\"days\":29,\"decided\":0,\"hit\":0,\"up\":29}"
+  },
+  {
+   "id": "S12",
+   "item": "default: one userFills call per wallet; 5,000-fill wallet listed as recent-days sample (1,999: the oldest millisecond of a full page counts as unread); 40,000-fill wallet (2,000 = 1.4 days) excluded for too few days; no userFillsByTime",
+   "pass": true,
+   "actual": "Big:300, 0xaaaa:1999/11.2d, Flaky:50 · calls/wallet 1 · {\"turnover above 200x\":1,\"account value below minimum\":1,\"BTC share below 30%\":1,\"fewer than 5 BTC days\":2}"
+  },
+  {
+   "id": "S13",
+   "item": "month volume 0 on the leaderboard → skipped without a fills call",
+   "pass": true,
+   "actual": "{\"turnover above 200x\":1,\"account value below minimum\":1,\"no volume this month (leaderboard)\":1,\"BTC share below 30%\":1,\"fewer than 5 BTC days\":2}"
+  }
+ ]
+}
